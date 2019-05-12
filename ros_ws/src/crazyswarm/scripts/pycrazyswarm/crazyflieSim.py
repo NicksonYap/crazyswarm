@@ -3,6 +3,8 @@
 import yaml
 import math
 import numpy as np
+from timeit import default_timer as timer
+import time
 
 import cfsim.cffirmware as firm
 
@@ -20,7 +22,7 @@ class TimeHelper:
             self.visualizer = visualizer.visVispy.VisVispy()
         else:
             raise Exception("Unknown visualization backend: {}".format(vis))
-        self.t = 0.0
+        self.start_t = timer()
         self.dt = dt
         self.crazyflies = []
         if writecsv:
@@ -30,19 +32,20 @@ class TimeHelper:
             self.output = None
 
     def time(self):
-        return self.t
-
-    def step(self, duration):
-        self.t += duration
+        return timer() - self.start_t
 
     # should be called "animate" or something
     # but called "sleep" for source-compatibility with real-robot scripts
     def sleep(self, duration):
-        for t in np.arange(self.t, self.t + duration, self.dt):
-            self.visualizer.update(t, self.crazyflies)
+        sleep_start_t = timer()
+        elapsed_time = 0
+        while elapsed_time < float(duration):
+            elapsed_time = timer() - sleep_start_t
+            self.visualizer.update(self.time(), self.crazyflies)
             if self.output:
-                self.output.update(t, self.crazyflies)
-            self.step(self.dt)
+                self.output.update(self.time(), self.crazyflies)
+            if self.dt > 0:
+                time.sleep(self.dt)
 
     def nextPhase(self):
         if self.output:

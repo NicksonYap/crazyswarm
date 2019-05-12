@@ -180,6 +180,7 @@ class VisVispy:
                 self.cf_data[visual_name] = {}
 
     def update(self, t, crazyflies):
+        # print('time: ', round(t, 6))
         self.init_cf_mesh(crazyflies)
 
         self.canvas.app.process_events()
