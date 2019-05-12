@@ -13,15 +13,8 @@ import cfsim.cffirmware as firm
 # also does the plotting.
 #
 class TimeHelper:
-    def __init__(self, vis, frame_interval, writecsv, speed):
-        if vis == "mpl":
-            import visualizer.visMatplotlib
-            self.visualizer = visualizer.visMatplotlib.VisMatplotlib()
-        elif vis == "vispy":
-            import visualizer.visVispy
-            self.visualizer = visualizer.visVispy.VisVispy()
-        else:
-            raise Exception("Unknown visualization backend: {}".format(vis))
+    def __init__(self, visualizer, frame_interval, writecsv, speed):
+        self.visualizer = visualizer
         self.start_t = timer()
         self.frame_interval = frame_interval
         self.speed = speed

@@ -14,7 +14,17 @@ class Crazyswarm:
 
         if args.sim:
             import crazyflieSim
-            self.timeHelper = crazyflieSim.TimeHelper(args.vis, args.frame_interval, args.writecsv, args.speed)
+
+            if args.vis == "mpl":
+                import visualizer.visMatplotlib
+                self.visualizer = visualizer.visMatplotlib.VisMatplotlib()
+            elif args.vis == "vispy":
+                import visualizer.visVispy
+                self.visualizer = visualizer.visVispy.VisVispy()
+            else:
+                raise Exception("Unknown visualization backend: {}".format(args.vis))
+
+            self.timeHelper = crazyflieSim.TimeHelper(self.visualizer, args.frame_interval, args.writecsv, args.speed)
             self.allcfs = crazyflieSim.CrazyflieServer(self.timeHelper)
         else:
             import crazyflie
