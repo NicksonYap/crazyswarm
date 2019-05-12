@@ -64,6 +64,11 @@ class VisVispy:
         print("RMB or scroll: change scale_factor (i.e. zoom level)")
         print("SHIFT + LMB: translate the center point")
         print("SHIFT + RMB: change FOV")
+        print("Press E: Export Current CF Positions")
+        print("Press P: Pause at Current Frame and ingore frame updates")
+
+
+        self.ignore_update = False
          
     def visual_drag_end(self):
         self.visual_dragging = None
@@ -157,13 +162,39 @@ class VisVispy:
         ## #add tuples with each other https://stackoverflow.com/a/498103/3553367
         return tuple(map(sum, zip(tuple_a, tuple_b)))
 
+    def round_tuple(self, tuple_a, decimals):
+        ## ref: https://stackoverflow.com/a/3928583/3553367
+        return tuple(map(lambda x: isinstance(x, float) and round(x, decimals) or x, tuple_a))
+
     def key_pressed_handler(self, event):
         ## handles all types of mouse input events
-        print('key_press', event.key)
+        # print('key_press', event.key)
+        if (event.key == 'E'):
+            self.printActualXYZ()
+        if (event.key == 'P'):
+            self.toggleFrameUpdate()
 
     def key_released_handler(self, event):
         ## handles all types of mouse input events
-        print('key_release', event.key)
+        # print('key_release', event.key)
+        return
+        
+
+    def toggleFrameUpdate(self):
+        self.ignore_update = ~self.ignore_update
+        if self.ignore_update:
+            print('Start - Ignore Frame Updates')
+        else:
+            print('Stop - Ignore Frame Updates')
+        
+
+    def printActualXYZ(self):
+        ## handles all types of mouse input events
+        # print('key_release', event.key)
+        print('Print - CF XYZ')
+        for visual_name in self.cf_data.keys():
+            actual_xyz = self.cf_data[visual_name]['actual_xyz']
+            print(visual_name, self.round_tuple(actual_xyz, 3))
         
 
     def init_cf_mesh(self, crazyflies):
@@ -180,34 +211,66 @@ class VisVispy:
                 self.cf_data[visual_name] = {}
 
     def update(self, t, crazyflies):
-        # print('time: ', round(t, 6))
+        # print('time: ', round(t, 3))
         self.init_cf_mesh(crazyflies)
 
-        self.canvas.app.process_events()
-
-        for i in range(0, len(self.cf_mesh)):
-            visual_name = 'drone_' + str(i)
-            x, y, z = crazyflies[i].position()
-            roll, pitch, yaw = crazyflies[i].rpy()
-            color = crazyflies[i].ledRGB
-
-            self.cf_mesh[visual_name].transform.reset()
-            self.cf_mesh[visual_name].transform.scale(MESH_SCALE)
-            self.cf_mesh[visual_name].transform.rotate(90, (1, 0, 0))
-            self.cf_mesh[visual_name].transform.rotate(math.degrees(roll), (1, 0, 0))
-            self.cf_mesh[visual_name].transform.rotate(math.degrees(pitch), (0, 1, 0))
-            self.cf_mesh[visual_name].transform.rotate(math.degrees(yaw), (0, 0, 1))
+        keep_updating = True
+        
+        while keep_updating:
+        
+            self.canvas.app.process_events()
 
 
-            confirmed_delta_xyz = self.cf_data[visual_name].get('confirmed_delta_xyz', (0 ,0 ,0))
-            pending_delta_xyz = self.cf_data[visual_name].get('pending_delta_xyz', (0 ,0 ,0))
+            for i in range(0, len(self.cf_mesh)):
+                visual_name = 'drone_' + str(i)
 
-            delta_x, delta_y, delta_z = self.add_tuples(confirmed_delta_xyz, pending_delta_xyz)
+                if not self.ignore_update:    
+                    keep_updating = False
+                    xyz = tuple(crazyflies[i].position())
+                    rpy = crazyflies[i].rpy()
+                    color = crazyflies[i].ledRGB
+                else:
+                    #TODO: Those dict may not exist if have not used real one even once
+                    xyz = self.cf_data[visual_name]['xyz']
+                    rpy = self.cf_data[visual_name]['rpy']
+                    color = self.cf_data[visual_name]['color']
 
-            self.cf_mesh[visual_name].transform.translate((x + delta_x, y + delta_y, z + delta_z))
 
-            # if color was not set, or color has changed
-            # vispy does not do this check
-            if (self.cf_data[visual_name].get('color', None) is None) or (color != self.cf_data[visual_name]['color']): 
-                self.cf_mesh[visual_name].color = color
-                self.cf_data[visual_name]['color'] = color
+                roll, pitch, yaw = rpy
+
+                self.cf_mesh[visual_name].transform.reset()
+                self.cf_mesh[visual_name].transform.scale(MESH_SCALE)
+                self.cf_mesh[visual_name].transform.rotate(90, (1, 0, 0))
+                self.cf_mesh[visual_name].transform.rotate(math.degrees(roll), (1, 0, 0))
+                self.cf_mesh[visual_name].transform.rotate(math.degrees(pitch), (0, 1, 0))
+                self.cf_mesh[visual_name].transform.rotate(math.degrees(yaw), (0, 0, 1))
+
+
+                confirmed_delta_xyz = self.cf_data[visual_name].get('confirmed_delta_xyz', (0 ,0 ,0))
+                pending_delta_xyz = self.cf_data[visual_name].get('pending_delta_xyz', (0 ,0 ,0))
+                actual_delta_xyz = self.add_tuples(confirmed_delta_xyz, pending_delta_xyz)
+
+
+                actual_xyz = self.add_tuples(xyz, actual_delta_xyz)
+
+                actual_x, actual_y, actual_z = actual_xyz
+
+                self.cf_mesh[visual_name].transform.translate((actual_x, actual_y, actual_z))
+
+                # if color was not set, or color has changed
+                # vispy does not do this check
+                if (self.cf_data[visual_name].get('color', None) is None) or (color != self.cf_data[visual_name]['color']): 
+                    self.cf_mesh[visual_name].color = color
+                    self.cf_data[visual_name]['color'] = color
+
+                if (self.cf_data[visual_name].get('xyz', None) is None) or (xyz != self.cf_data[visual_name]['xyz']): 
+                    self.cf_data[visual_name]['xyz'] = xyz
+
+                if (self.cf_data[visual_name].get('rpy', None) is None) or (rpy != self.cf_data[visual_name]['rpy']): 
+                    self.cf_data[visual_name]['rpy'] = rpy
+
+                if (self.cf_data[visual_name].get('actual_delta_xyz', None) is None) or (actual_delta_xyz != self.cf_data[visual_name]['actual_delta_xyz']): 
+                    self.cf_data[visual_name]['actual_delta_xyz'] = actual_delta_xyz
+
+                if (self.cf_data[visual_name].get('actual_xyz', None) is None) or (actual_xyz != self.cf_data[visual_name]['actual_xyz']): 
+                    self.cf_data[visual_name]['actual_xyz'] = actual_xyz
