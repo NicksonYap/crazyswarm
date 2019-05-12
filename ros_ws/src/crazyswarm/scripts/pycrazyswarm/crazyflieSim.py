@@ -13,7 +13,7 @@ import cfsim.cffirmware as firm
 # also does the plotting.
 #
 class TimeHelper:
-    def __init__(self, vis, dt, writecsv):
+    def __init__(self, vis, frame_interval, writecsv, speed):
         if vis == "mpl":
             import visualizer.visMatplotlib
             self.visualizer = visualizer.visMatplotlib.VisMatplotlib()
@@ -23,7 +23,8 @@ class TimeHelper:
         else:
             raise Exception("Unknown visualization backend: {}".format(vis))
         self.start_t = timer()
-        self.dt = dt
+        self.frame_interval = frame_interval
+        self.speed = speed
         self.crazyflies = []
         if writecsv:
             import output
@@ -32,7 +33,7 @@ class TimeHelper:
             self.output = None
 
     def time(self):
-        return timer() - self.start_t
+        return (timer() - self.start_t) * self.speed
 
     # should be called "animate" or something
     # but called "sleep" for source-compatibility with real-robot scripts
@@ -40,12 +41,12 @@ class TimeHelper:
         sleep_start_t = timer()
         elapsed_time = 0
         while elapsed_time < float(duration):
-            elapsed_time = timer() - sleep_start_t
+            elapsed_time = (timer() - sleep_start_t) * self.speed
             self.visualizer.update(self.time(), self.crazyflies)
             if self.output:
                 self.output.update(self.time(), self.crazyflies)
-            if self.dt > 0:
-                time.sleep(self.dt)
+            if self.frame_interval > 0:
+                time.sleep(self.frame_interval)
 
     def nextPhase(self):
         if self.output:
