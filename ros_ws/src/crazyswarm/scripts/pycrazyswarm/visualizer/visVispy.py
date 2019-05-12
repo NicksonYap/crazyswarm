@@ -117,11 +117,11 @@ class VisVispy:
                 actual_color = self.cf_data[visual_name]['color']
                 dragging_visual.color = (actual_color[0], actual_color[1], actual_color[2], 1)
 
-                #confirm the delta_xyz
-                confirmed_delta_xyz = self.cf_data[visual_name].get('confirmed_delta_xyz', (0 ,0 ,0))
-                pending_delta_xyz = self.cf_data[visual_name].get('pending_delta_xyz', (0 ,0 ,0))
-                self.cf_data[visual_name]['confirmed_delta_xyz'] = self.add_tuples(confirmed_delta_xyz, pending_delta_xyz)
-                self.cf_data[visual_name]['pending_delta_xyz'] = (0,0,0)
+                #confirm the delta_xyzyaw
+                confirmed_delta_xyzyaw = self.cf_data[visual_name].get('confirmed_delta_xyzyaw', (0 ,0 ,0, 0))
+                pending_delta_xyzyaw = self.cf_data[visual_name].get('pending_delta_xyzyaw', (0 ,0 ,0, 0))
+                self.cf_data[visual_name]['confirmed_delta_xyzyaw'] = self.add_tuples(confirmed_delta_xyzyaw, pending_delta_xyzyaw)
+                self.cf_data[visual_name]['pending_delta_xyzyaw'] = (0,0,0, 0)
 
             self.visual_drag_end()
 
@@ -143,16 +143,18 @@ class VisVispy:
                 delta_x = mouse_delta_x/100
                 delta_y = -mouse_delta_y/100
                 delta_z = 0
+                delta_yaw = 0
             else:
-                delta_x = mouse_delta_x/100
+                delta_x = 0
                 delta_y = 0
                 delta_z = -mouse_delta_y/100
+                delta_yaw = mouse_delta_x/100
             
             # print(visual_name, start_transform, delta_x , delta_y, delta_z)
             
             actual_color = self.cf_data[visual_name]['color']
             dragging_visual.color = (actual_color[0], actual_color[1], actual_color[2], 0.5)
-            self.cf_data[visual_name]['pending_delta_xyz'] = (delta_x, delta_y, delta_z)
+            self.cf_data[visual_name]['pending_delta_xyzyaw'] = (delta_x, delta_y, delta_z, delta_yaw)
 
         else:
             
@@ -193,8 +195,8 @@ class VisVispy:
         # print('key_release', event.key)
         print('Print - CF XYZ')
         for visual_name in self.cf_data.keys():
-            actual_xyz = self.cf_data[visual_name]['actual_xyz']
-            print(visual_name, self.round_tuple(actual_xyz, 3))
+            actual_xyzyaw = self.cf_data[visual_name]['actual_xyzyaw']
+            print(visual_name, self.round_tuple(actual_xyzyaw, 3))
         
 
     def init_cf_mesh(self, crazyflies):
@@ -235,25 +237,23 @@ class VisVispy:
                     rpy = self.cf_data[visual_name]['rpy']
                     color = self.cf_data[visual_name]['color']
 
-
+                x, y, z = xyz
                 roll, pitch, yaw = rpy
+                xyzyaw = (x, y, z, yaw)
+
+                confirmed_delta_xyzyaw = self.cf_data[visual_name].get('confirmed_delta_xyzyaw', (0 ,0 ,0, 0))
+                pending_delta_xyzyaw = self.cf_data[visual_name].get('pending_delta_xyzyaw', (0 ,0 ,0, 0))
+                actual_delta_xyzyaw = self.add_tuples(confirmed_delta_xyzyaw, pending_delta_xyzyaw)
+                actual_xyzyaw = self.add_tuples(xyzyaw, actual_delta_xyzyaw)
+                actual_x, actual_y, actual_z, actual_yaw = actual_xyzyaw
 
                 self.cf_mesh[visual_name].transform.reset()
                 self.cf_mesh[visual_name].transform.scale(MESH_SCALE)
                 self.cf_mesh[visual_name].transform.rotate(90, (1, 0, 0))
                 self.cf_mesh[visual_name].transform.rotate(math.degrees(roll), (1, 0, 0))
                 self.cf_mesh[visual_name].transform.rotate(math.degrees(pitch), (0, 1, 0))
-                self.cf_mesh[visual_name].transform.rotate(math.degrees(yaw), (0, 0, 1))
-
-
-                confirmed_delta_xyz = self.cf_data[visual_name].get('confirmed_delta_xyz', (0 ,0 ,0))
-                pending_delta_xyz = self.cf_data[visual_name].get('pending_delta_xyz', (0 ,0 ,0))
-                actual_delta_xyz = self.add_tuples(confirmed_delta_xyz, pending_delta_xyz)
-
-
-                actual_xyz = self.add_tuples(xyz, actual_delta_xyz)
-
-                actual_x, actual_y, actual_z = actual_xyz
+                # self.cf_mesh[visual_name].transform.rotate(math.degrees(yaw), (0, 0, 1))
+                self.cf_mesh[visual_name].transform.rotate(math.degrees(actual_yaw), (0, 0, 1))
 
                 self.cf_mesh[visual_name].transform.translate((actual_x, actual_y, actual_z))
 
@@ -269,8 +269,8 @@ class VisVispy:
                 if (self.cf_data[visual_name].get('rpy', None) is None) or (rpy != self.cf_data[visual_name]['rpy']): 
                     self.cf_data[visual_name]['rpy'] = rpy
 
-                if (self.cf_data[visual_name].get('actual_delta_xyz', None) is None) or (actual_delta_xyz != self.cf_data[visual_name]['actual_delta_xyz']): 
-                    self.cf_data[visual_name]['actual_delta_xyz'] = actual_delta_xyz
+                if (self.cf_data[visual_name].get('actual_delta_xyzyaw', None) is None) or (actual_delta_xyzyaw != self.cf_data[visual_name]['actual_delta_xyzyaw']): 
+                    self.cf_data[visual_name]['actual_delta_xyzyaw'] = actual_delta_xyzyaw
 
-                if (self.cf_data[visual_name].get('actual_xyz', None) is None) or (actual_xyz != self.cf_data[visual_name]['actual_xyz']): 
-                    self.cf_data[visual_name]['actual_xyz'] = actual_xyz
+                if (self.cf_data[visual_name].get('actual_xyzyaw', None) is None) or (actual_xyzyaw != self.cf_data[visual_name]['actual_xyzyaw']): 
+                    self.cf_data[visual_name]['actual_xyzyaw'] = actual_xyzyaw
