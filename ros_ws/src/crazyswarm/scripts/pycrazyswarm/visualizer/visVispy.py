@@ -140,15 +140,15 @@ class VisVispy:
             mouse_delta_x = float(mouse_pos['x'] - start_mouse_pos['x'])
 
             if is_left_click:
-                delta_x = mouse_delta_x/100
-                delta_y = -mouse_delta_y/100
+                delta_x = mouse_delta_x/100 if abs(mouse_delta_x) > abs(mouse_delta_y) else 0
+                delta_y = -mouse_delta_y/100 if abs(mouse_delta_x) < abs(mouse_delta_y) else 0
                 delta_z = 0
                 delta_yaw = 0
             else:
                 delta_x = 0
                 delta_y = 0
-                delta_z = -mouse_delta_y/100
-                delta_yaw = mouse_delta_x/100
+                delta_z = -mouse_delta_y/100 if abs(mouse_delta_x) < abs(mouse_delta_y) else 0
+                delta_yaw = mouse_delta_x/100 if abs(mouse_delta_x) > abs(mouse_delta_y) else 0
             
             # print(visual_name, start_transform, delta_x , delta_y, delta_z)
             
