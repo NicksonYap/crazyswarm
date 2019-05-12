@@ -19,6 +19,7 @@ if __name__ == "__main__":
         for cf in allcfs.crazyflies:
             cf.uploadTrajectory(0, 0, traj1)
 
+        timeHelper.sleep(3)
         allcfs.takeoff(targetHeight=1.0, duration=2.0)
         timeHelper.sleep(2.5)
         for cf in allcfs.crazyflies:
