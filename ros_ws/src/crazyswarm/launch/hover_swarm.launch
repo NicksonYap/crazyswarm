@@ -23,12 +23,12 @@
           enHighLevel: 1
         stabilizer:
           estimator: 3 # 1: complementary, 2: kalman, 3: kalmanUSC (only crazyswarm firmware)
-          controller: 2 # 1: PID, 2: mellinger
+          controller: 1 # 1: PID, 2: mellinger
         ring:
-          effect: 16 # 6: double spinner, 7: solid color, 16: packetRate
-          solidBlue: 255 # if set to solid color
-          solidGreen: 0 # if set to solid color
-          solidRed: 0 # if set to solid color
+          effect: 7 # 6: double spinner, 7: solid color, 16: packetRate
+          solidBlue: 100 # if set to solid color
+          solidGreen: 100 # if set to solid color
+          solidRed: 100 # if set to solid color
           headlightEnable: 0
         #ekf:
         #  ext_var_xy: 1.5e-7 # 1e-7 # 1.5e-7
@@ -38,7 +38,7 @@
         #  gyro_var_z: 0.2e-2 # 0.2e-4
         #  acc_var_xyz: 2.4e-3 # 2.4e-3
       # tracking
-      motion_capture_type: "vicon" # one of none,vicon,optitrack,qualisys,vrpn
+      motion_capture_type: "none" # one of none,vicon,optitrack,qualisys,vrpn
       object_tracking_type: "libobjecttracker" # one of motionCapture,libobjecttracker
       vicon_host_name: "vicon"
       # optitrack_host_name: "optitrack"
@@ -48,7 +48,7 @@
       save_point_clouds: ~/pointCloud.ot
       print_latency: False
       write_csvs: False
-      force_no_cache: False
+      force_no_cache: True
       enable_parameters: True
       enable_logging: False
     </rosparam>
