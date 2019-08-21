@@ -5,16 +5,16 @@ ROOT=$PWD
 
 # submodules
 git submodule init
-git submodule update
+# git submodule update
 
 cd ros_ws/src/crazyflie_ros/
 git submodule init
-git submodule update
+# git submodule update
 cd $ROOT
 
 cd ros_ws/src/externalDependencies/libmotioncapture/
 git submodule init
-git submodule update
+# git submodule update
 cd $ROOT
 
 # build nrf firmware
@@ -26,7 +26,7 @@ cd $ROOT
 # build stm firmware
 cd crazyflie-firmware
 git submodule init
-git submodule update
+# git submodule update
 make
 cd $ROOT
 
